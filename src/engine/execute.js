@@ -108,29 +108,39 @@ var execute = function (sequencer, thread) {
     // Generate values for arguments (inputs).
     var argValues = {};
 
-    // Add all fields on this block to the argValues.
-    for (var fieldName in fields) {
-        argValues[fieldName] = fields[fieldName].value;
-    }
-
-    // Recursively evaluate input blocks.
-    for (var inputName in inputs) {
-        var input = inputs[inputName];
-        var inputBlockId = input.block;
-        // Is there no value for this input waiting in the stack frame?
-        if (typeof currentStackFrame.reported[inputName] === 'undefined') {
-            // If there's not, we need to evaluate the block.
-            var reporterYielded = (
-                sequencer.stepToReporter(thread, inputBlockId, inputName)
-            );
-            // If the reporter yielded, return immediately;
-            // it needs time to finish and report its value.
-            if (reporterYielded) {
-                return;
-            }
+    // Do we have the cached args on the stack frame?
+    // This could be true if we're returning from some substack, for example.
+    if (currentStackFrame.hasOwnProperty('cachedArgs')) {
+        for (var arg in currentStackFrame.cachedArgs) {
+            argValues[arg] = currentStackFrame.cachedArgs[arg];
         }
-        argValues[inputName] = currentStackFrame.reported[inputName];
+    } else {
+        // Add all fields on this block to the argValues.
+        for (var fieldName in fields) {
+            argValues[fieldName] = fields[fieldName].value;
+        }
+
+        // Recursively evaluate input blocks.
+        for (var inputName in inputs) {
+            var input = inputs[inputName];
+            var inputBlockId = input.block;
+            // Is there no value for this input waiting in the stack frame?
+            if (typeof currentStackFrame.reported[inputName] === 'undefined') {
+                // If there's not, we need to evaluate the block.
+                var reporterYielded = (
+                    sequencer.stepToReporter(thread, inputBlockId, inputName)
+                );
+                // If the reporter yielded, return immediately;
+                // it needs time to finish and report its value.
+                if (reporterYielded) {
+                    return;
+                }
+            }
+            argValues[inputName] = currentStackFrame.reported[inputName];
+        }
     }
+    // Cache the calculated argValues on the stack frame.
+    currentStackFrame.cachedArgs = argValues;
 
     // If we've gotten this far, all of the input blocks are evaluated,
     // and `argValues` is fully populated. So, execute the block primitive.
@@ -147,6 +157,9 @@ var execute = function (sequencer, thread) {
         },
         yieldFrame: function() {
             thread.setStatus(Thread.STATUS_YIELD_FRAME);
+        },
+        reevaluateArgs: function() {
+            delete currentStackFrame.cachedArgs;
         },
         done: function() {
             thread.setStatus(Thread.STATUS_RUNNING);

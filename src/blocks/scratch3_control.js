@@ -74,6 +74,7 @@ Scratch3ControlBlocks.prototype.repeatUntil = function(args, util) {
     } else {
         util.stackFrame.executedInFrame = false;
         util.yieldFrame();
+        util.reevaluateArgs();
     }
 };
 
@@ -82,6 +83,7 @@ Scratch3ControlBlocks.prototype.waitUntil = function(args, util) {
     // Only execute once per frame.
     if (!condition) {
         util.yieldFrame();
+        util.reevaluateArgs();
     }
 };
 
