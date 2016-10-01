@@ -7,6 +7,7 @@ function Scratch3ProcedureBlocks(runtime) {
 }
 
 Scratch3ProcedureBlocks.prototype.RETURN = null;
+Scratch3ProcedureBlocks.prototype.RETURN2 = null;
 
 /**
  * Retrieve the block primitives implemented by this package.
@@ -17,7 +18,8 @@ Scratch3ProcedureBlocks.prototype.getPrimitives = function() {
         'procedures_defnoreturn': this.defNoReturn,
         'procedures_callnoreturn': this.callNoReturn,
         'procedures_defreturn': this.defReturn,
-        'procedures_callreturn': this.callReturn
+        'procedures_callreturn': this.callReturn,
+        'procedures_report': this.report
     };
 };
 
@@ -45,7 +47,15 @@ Scratch3ProcedureBlocks.prototype.callReturn = function (args, util) {
         util.stackFrame.executed = true;
         util.startProcedure(procedureName);
     }
+    if (this.RETURN2) {
+        this.RETURN = this.RETURN2;
+        this.RETURN2 = null;
+    }
     return this.RETURN;
+};
+
+Scratch3ProcedureBlocks.prototype.report = function (args) {
+    this.RETURN2 = args.VALUE;
 };
 
 module.exports = Scratch3ProcedureBlocks;
