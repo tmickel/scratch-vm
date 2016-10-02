@@ -42,6 +42,7 @@ Scratch3ProcedureBlocks.prototype.defReturn = function (args) {
 };
 
 Scratch3ProcedureBlocks.prototype.callReturn = function (args, util) {
+    this.RETURN2 = null;
     if (!util.stackFrame.executed) {
         var procedureName = args.mutation.name;
         util.stackFrame.executed = true;
